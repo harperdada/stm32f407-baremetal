@@ -19,15 +19,10 @@
 
 #include "stm32f4xx.h"
 #include "system_stm32f4xx.h"
-#include "gpio.h"
-
-#define FREQ 16000000  // CPU frequency, 16 Mhz
 
 /*************************************************
 * function declarations
 *************************************************/
-void _init(void) {;}
-
 int main(void);
 
 volatile uint8_t msg[] = "Dude! I am interrupt driven.\n";
@@ -57,56 +52,13 @@ void USART3_IRQHandler(void)
     }
 }
 
-static volatile uint32_t s_ticks;
-
-void SysTick_Handler(void) {
-   s_ticks++;
-}
-
-// t: expiration time, prd: period, now: current time. Return true if expired
-static inline bool timer_expired(uint32_t *t, uint32_t prd, uint32_t now) {
-  if (now + prd < *t) *t = 0;                    // Time wrapped? Reset timer
-  if (*t == 0) *t = now + prd;                   // Firt poll? Set expiration
-  if (*t > now) return false;                    // Not expired yet, return
-  *t = (now - *t) > prd ? now + prd : *t + prd;  // Next expiration time
-  return true;                                   // Expired, return true
-}
-
-/*************************************************
-* initialize SysTick
-*************************************************/
-static inline void systick_init(uint32_t s)
-{   
-    // Clear CTRL register
-    SysTick->CTRL = 0x00000;
-    // Main clock source is running with HSI by default which is at 8 Mhz.
-    // SysTick clock source can be set with CTRL register (Bit 2)
-    // 0: Processor clock/8 (AHB/8)
-    // 1: Processor clock (AHB)
-    SysTick->CTRL |= (1 << 2);
-    // Enable callback (bit 1)
-    SysTick->CTRL |= (1 << 1);
-    // Load the value
-    SysTick->LOAD = (uint32_t)(s-1);
-    // Set the current value to 0
-    SysTick->VAL = 0;
-    // Enable SysTick (bit 0)
-    SysTick->CTRL |= (1 << 0);
-    //RCC->APB1ENR |= 1<<28;
-}
-
 /*************************************************
 * main code starts from here
 *************************************************/
 int main(void)
 {
-    uint16_t led1 = PIN('D', 15);            // Blue LED
     /* set system clock to 168 Mhz */
     set_sysclk_to_168();
-
-    systick_init(FREQ / 1000);             // Tick every 1 ms
-
-    gpio_set_mode(led1, GPIO_MODE_OUTPUT);
 
     // enable USART3 clock, bit 18 on APB1ENR
     RCC->APB1ENR |= (1 << 18);
@@ -169,7 +121,7 @@ int main(void)
     // enable tx interrupt and let it push out
     USART3->CR1 |= (1 << 7);
 
-    uint32_t timer = 0, period = 4000;      // Declare timer and 1000ms period
+    uint32_t timer = 0, period = 40000;      // Declare timer and 1000ms period
     while(1)
     {
 #if 0
@@ -181,15 +133,9 @@ int main(void)
 
         }
 #endif
-     if (timer_expired(&timer, period, s_ticks)) {
-         static bool on;       // This block is executed
-         gpio_write(led1, on);  // Every `period` milliseconds
-         on = !on;             // Toggle LED state
-     }
         // slow down
         for(int i=0; i<10000000; i++); // a long wait. should be more than enough the push out the buffer
        // restart transmission by enabling usart3 tx interrupt
-        printf("ticks: %lu\n", s_ticks);
         USART3->CR1 |= (1 << 7);
     }
 

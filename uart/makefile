@@ -1,5 +1,5 @@
 TARGET = uart
-SRCS = uart.c
+SRCS = uart.c syscalls.c
 
 LINKER_SCRIPT = ../../flash/STM32F407VGTX_FLASH.ld
 

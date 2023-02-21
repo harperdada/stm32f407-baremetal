@@ -134,7 +134,7 @@ int main (void) {
     }
 }
 /*  Initialize UART pins, Baudrate
-    The USART3 is configured to send output to pin PA2 at 9600 Baud.
+    The USART3 is configured to send output to pin PD8 at 115200 Baud
  */
 void USART3_init (unsigned long baud) {
     uint8_t af = 0;           // Alternate function

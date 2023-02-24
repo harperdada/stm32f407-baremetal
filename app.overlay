@@ -1,0 +1,40 @@
+&flash0 {
+        /*
+         * For more information, see:
+         * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+         */
+        partitions {
+                compatible = "fixed-partitions";
+                #address-cells = <1>;
+                #size-cells = <1>;
+
+                boot_partition: partition@0 {
+                        label = "mcuboot";
+                        reg = <0x000000000 0x000080000>;
+                };
+                slot0_partition: partition@80000 {
+                        label = "image-0";
+                        reg = <0x000080000 0x00010000>;
+                };
+                slot1_partition: partition@90000 {
+                        label = "image-1";
+                        reg = <0x00090000 0x00010000>;
+                };
+
+                blob_partition: partition@a0000 {
+                        label = "image-blob";
+                        reg = <0x000a0000 0x00010000>;
+                };
+
+                /*
+                 * The flash starting at c0000 and ending at (64kB)
+                   the above changed to 0xc0000 and ending at 64 Kb
+                 */
+
+                /* Storage partition will be used by FCB/NFFS/NVS if enabled. */
+                storage_partition: partition@c0000 {
+                        label = "storage";
+                        reg = <0xc0000 0x00010000>;
+                };
+        };
+};
